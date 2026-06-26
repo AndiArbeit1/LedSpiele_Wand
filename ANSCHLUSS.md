@@ -39,15 +39,20 @@ Koordinaten: **x = Spalte 0–7** (links → rechts), **y = Zeile 0–7** (oben 
 
 | Pi-Pin | Signal | geht an |
 |--------|--------|---------|
-| **Pin 1** | 3,3 V | VCC **aller** MCP23017 |
-| **Pin 3** | GPIO2 / SDA | SDA **aller** MCP23017 |
-| **Pin 5** | GPIO3 / SCL | SCL **aller** MCP23017 |
+| **Pin 1** | 3,3 V | **LV-Referenz** des BSS138-Pegelwandlers (nicht direkt an die MCPs!) |
+| **Pin 3** | GPIO2 / SDA | SDA-Bus zu allen MCP23017 — **über BSS138-Pegelwandler** |
+| **Pin 5** | GPIO3 / SCL | SCL-Bus zu allen MCP23017 — **über BSS138-Pegelwandler** |
 | **Pin 6** | GND | GND der LEDs **und** Netzteil-GND |
 | **Pin 9** | GND | GND **aller** MCP23017 + Taster-Pull-Downs |
 | **Pin 40** | GPIO21 | LED **DIN** (über 330–470 Ω) |
 
+> Die **MCP23017 werden mit 5 V** aus dem externen Netzteil versorgt (nicht
+> über den Pi). Weil dadurch SDA/SCL auf 5-V-Pegel liegen, gehen beide
+> Leitungen **über den BSS138-Pegelwandler** (HV-Seite = 5 V, LV-Seite =
+> Pi-3,3 V an Pin 1) — niemals direkt an den 3,3-V-Pi.
+
 > Wichtig: **Alle Massen verbinden** — Pi-GND, Netzteil-GND, LED-GND und
-> PCF-GND müssen auf einem gemeinsamen Massepunkt liegen.
+> MCP-GND müssen auf einem gemeinsamen Massepunkt liegen.
 
 > Warum GPIO21 (Pin 40) und nicht GPIO18 (Pin 12): GPIO18 ist Hardware-PWM
 > (PWM0) — dieselbe PWM-Peripherie, über die der Pi auch das analoge
@@ -88,25 +93,29 @@ Alle vier Chips hängen am **selben** I²C-Bus (SDA/SCL/VCC/GND gemeinsam).
 Jeder Chip bekommt über seine Adress-Pins **A0/A1/A2** eine eigene Adresse:
 
 | Chip | A2 | A1 | A0 | I²C-Adresse | Tasterzeilen |
-|------|----|----|----|-------------|--------------|
-| Chip 0 | GND | GND | GND | **0x20** | y = 0 und 1 |
-| Chip 1 | GND | GND | 3V3 | **0x21** | y = 2 und 3 |
-| Chip 2 | GND | 3V3 | GND | **0x22** | y = 4 und 5 |
-| Chip 3 | GND | 3V3 | 3V3 | **0x23** | y = 6 und 7 |
+|------|------|------|------|-------------|--------------|
+| Chip 0 | n.c. | n.c. | n.c. | **0x20** | y = 0 und 1 |
+| Chip 1 | n.c. | n.c. | 5V   | **0x21** | y = 2 und 3 |
+| Chip 2 | n.c. | 5V   | n.c. | **0x22** | y = 4 und 5 |
+| Chip 3 | n.c. | 5V   | 5V   | **0x23** | y = 6 und 7 |
+
+**n.c. = nicht angeschlossen.** Die Breakout-Platine zieht die Adress-Pins
+intern auf LOW (= `0`/GND). Du musst also nur die Pins, die HIGH sein sollen,
+auf **5 V** legen — der Rest bleibt einfach offen.
 
 Gemeinsam an **jedem** MCP23017:
 
 | MCP23017-Pin | geht an |
 |--------------|---------|
-| VDD | Pi 3,3 V (Pin 1) |
+| VDD | **5 V** (externes Netzteil, gemeinsame Masse mit dem Pi) |
 | VSS | Pi GND (Pin 9) |
-| SDA | Pi GPIO2 / SDA (Pin 3) |
-| SCL | Pi GPIO3 / SCL (Pin 5) |
-| **RESET (Pin 18)** | **3,3 V** (Pi Pin 1) — anders als beim PCF8575 muss dieser Pin auf HIGH liegen, sonst bleibt der Chip im Reset |
+| SDA | I²C-Bus **über BSS138-Pegelwandler** zum Pi (Pin 3) |
+| SCL | I²C-Bus **über BSS138-Pegelwandler** zum Pi (Pin 5) |
+| **RESET (Pin 18)** | **nicht angeschlossen** — die Breakout-Platine hält RESET per internem Pull-up auf HIGH |
 | INTA / INTB | nicht beschaltet (ungenutzt) |
 
 **Jeder Taster:** eine Seite an einen Port-Pin (**GPA0…GPB7**) des Chips,
-die andere Seite an **3,3 V**. Eure Taster-Platinen haben bereits eigene
+die andere Seite an **5 V**. Eure Taster-Platinen haben bereits eigene
 Pull-Down-Widerstände vom Port-Pin nach GND — deshalb **keine** internen
 Pull-Ups im MCP23017 aktivieren (macht der Code auch nicht mehr). Offener
 Taster = `0` (vom Pull-Down nach Masse gezogen), gedrückter Taster = `1`
@@ -218,9 +227,9 @@ laufen dann automatisch unter `http://lightsout:8000/admin`.
 
 1. [ ] 5-V-Netzteil an LED-5V/GND, **GND mit Pi-GND verbunden**
 2. [ ] LED-DIN über Widerstand an GPIO21 (Pin 40)
-3. [ ] 4× MCP23017: VDD→3,3V, VSS→GND, SDA→Pin 3, SCL→Pin 5, **RESET→3,3V**
-4. [ ] MCP-Adressen per A0/A1/A2 auf 0x20/0x21/0x22/0x23 gestrappt
-5. [ ] 64 Taster: je 1 Pin am MCP (siehe Tabellen), andere Seite an 3,3V
+3. [ ] 4× MCP23017: **VDD→5V**, VSS→GND, SDA/SCL **über BSS138-Pegelwandler** an Pin 3/5, **RESET offen** (interner Pull-up)
+4. [ ] MCP-Adressen: A0/A1/A2 für `1` an **5V**, für `0` **offen lassen** → 0x20/0x21/0x22/0x23
+5. [ ] 64 Taster: je 1 Pin am MCP (siehe Tabellen), andere Seite an **5V**
    (Pull-Down nach GND ist schon auf den Taster-Platinen)
 6. [ ] `i2cdetect -y 1` zeigt 0x20–0x23
 7. [ ] `LEDMATRIX_HAL=real`, Dienst neu gestartet

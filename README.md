@@ -168,28 +168,35 @@ Alle vier MCP23017 teilen sich denselben I²C-Bus; jeder bekommt über seine
 Adress-Pins **A0/A1/A2** eine eigene Adresse:
 
 | MCP23017 | A2 | A1 | A0 | Adresse | Taster |
-|----------|----|----|----|---------|--------|
-| Chip 0  | GND | GND | GND | **0x20** | 0–15  |
-| Chip 1  | GND | GND | 3V3 | **0x21** | 16–31 |
-| Chip 2  | GND | 3V3 | GND | **0x22** | 32–47 |
-| Chip 3  | GND | 3V3 | 3V3 | **0x23** | 48–63 |
+|----------|------|------|------|---------|--------|
+| Chip 0  | n.c. | n.c. | n.c. | **0x20** | 0–15  |
+| Chip 1  | n.c. | n.c. | 5V   | **0x21** | 16–31 |
+| Chip 2  | n.c. | 5V   | n.c. | **0x22** | 32–47 |
+| Chip 3  | n.c. | 5V   | 5V   | **0x23** | 48–63 |
+
+**n.c. = nicht angeschlossen.** Die Breakout-Platine hält die Adress-Pins per
+internem Pull-Down auf LOW (= GND = `0`), also muss man nur die Pins, die HIGH
+sein sollen, auf **5V** legen. Adress-Pin nichts dran → `0`, an 5V → `1`.
 
 Gemeinsame Pins aller Chips:
 
-| MCP23017 | Raspberry Pi |
-|----------|--------------|
-| **VDD** | **3,3V** (Pin 1) |
-| **VSS** | **GND** (Pin 9) |
-| **SDA** | **GPIO2 / SDA** (Pin 3) |
-| **SCL** | **GPIO3 / SCL** (Pin 5) |
-| **RESET** (Pin 18 des Chips) | **3,3V** — muss HIGH liegen, sonst bleibt der Chip im Reset |
+| MCP23017 | Anschluss |
+|----------|-----------|
+| **VDD** | **5V** (externes Netzteil, gemeinsame Masse mit dem Pi) |
+| **VSS** | **GND** (Pin 9 am Pi, gemeinsamer Massepunkt) |
+| **SDA** | **GPIO2 / SDA** (Pin 3) — über **BSS138-Pegelwandler** (MCP-Seite 5V, Pi-Seite 3,3V) |
+| **SCL** | **GPIO3 / SCL** (Pin 5) — über **BSS138-Pegelwandler** (MCP-Seite 5V, Pi-Seite 3,3V) |
+| **RESET** (Pin 18 des Chips) | **nicht angeschlossen** — die Breakout-Platine hält RESET per internem Pull-up auf HIGH |
 | **INTA / INTB** | nicht beschaltet (ungenutzt) |
 
+> Weil die MCPs mit **5V** laufen, liegen SDA/SCL auf 5V-Pegel — sie dürfen
+> **nicht direkt** an den 3,3-V-Pi. Der **BSS138-Pegelwandler** setzt beide
+> Leitungen sauber auf 3,3V um (HV-Seite = 5V, LV-Seite = Pi-3,3V).
+
 Jeder Taster: eine Seite an einen Port-Pin **GPA0…GPB7** eines MCP23017,
-die andere Seite an **3,3V**. Pull-Down nach GND ist schon auf den
+die andere Seite an **5V**. Pull-Down nach GND ist schon auf den
 Taster-Platinen verbaut — deshalb bleiben die internen Pull-Ups des
-MCP23017 aus (anders als beim PCF8575, das quasi-bidirektional mit
-eigenen Pull-Ups arbeitet). Offener Taster liest `0`, gedrückter `1`.
+MCP23017 aus. Offener Taster liest `0`, gedrückter `1`.
 Genau das wertet der Code aus.
 
 Der Default in `config.py` legt die Taster zeilenweise 0…63 auf die vier
