@@ -97,7 +97,7 @@ Jeder Chip bekommt über seine Adress-Pins **A0/A1/A2** eine eigene Adresse:
 | Chip 0 | n.c. | n.c. | n.c. | **0x20** | y = 0 und 1 |
 | Chip 1 | n.c. | n.c. | 5V   | **0x21** | y = 2 und 3 |
 | Chip 2 | n.c. | 5V   | n.c. | **0x22** | y = 4 und 5 |
-| Chip 3 | n.c. | 5V   | 5V   | **0x23** | y = 6 und 7 |
+| Chip 3 | 5V   | n.c. | n.c. | **0x24** | y = 6 und 7 |
 
 **n.c. = nicht angeschlossen.** Die Breakout-Platine zieht die Adress-Pins
 intern auf LOW (= `0`/GND). Du musst also nur die Pins, die HIGH sein sollen,
@@ -164,7 +164,7 @@ Pin-Namen des MCP23017: Port A = **GPA0…GPA7**, Port B = **GPB0…GPB7**.
 | (6,4) | GPA6 | | (6,5) | GPB6 |
 | (7,4) | GPA7 | | (7,5) | GPB7 |
 
-### Chip 3 — Adresse 0x23
+### Chip 3 — Adresse 0x24
 | Taster (x,y) | Pin |  | Taster (x,y) | Pin |
 |---|---|---|---|---|
 | (0,6) | GPA0 | | (0,7) | GPB0 |
@@ -191,7 +191,7 @@ Ports.
 ```bash
 sudo raspi-config          # Interface Options -> I2C -> Enable, dann reboot
 sudo apt install -y i2c-tools
-i2cdetect -y 1             # muss 0x20 0x21 0x22 0x23 zeigen
+i2cdetect -y 1             # muss 0x20 0x21 0x22 0x24 zeigen
 ```
 
 ---
@@ -228,8 +228,8 @@ laufen dann automatisch unter `http://lightsout:8000/admin`.
 1. [ ] 5-V-Netzteil an LED-5V/GND, **GND mit Pi-GND verbunden**
 2. [ ] LED-DIN über Widerstand an GPIO21 (Pin 40)
 3. [ ] 4× MCP23017: **VDD→5V**, VSS→GND, SDA/SCL **über BSS138-Pegelwandler** an Pin 3/5, **RESET offen** (interner Pull-up)
-4. [ ] MCP-Adressen: A0/A1/A2 für `1` an **5V**, für `0` **offen lassen** → 0x20/0x21/0x22/0x23
+4. [ ] MCP-Adressen: A0/A1/A2 für `1` an **5V**, für `0` **offen lassen** → 0x20/0x21/0x22/**0x24** (Chip 3: nur A2 an 5V)
 5. [ ] 64 Taster: je 1 Pin am MCP (siehe Tabellen), andere Seite an **5V**
    (Pull-Down nach GND ist schon auf den Taster-Platinen)
-6. [ ] `i2cdetect -y 1` zeigt 0x20–0x23
+6. [ ] `i2cdetect -y 1` zeigt 0x20, 0x21, 0x22 und 0x24
 7. [ ] `LEDMATRIX_HAL=real`, Dienst neu gestartet

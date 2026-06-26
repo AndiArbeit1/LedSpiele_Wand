@@ -31,18 +31,19 @@ nutzt **vier 4×4-Kacheln** (Quadranten).
 
 **Level 1–4** = leicht → schwer (Tempo bzw. Schwierigkeit).
 
-Die **Kachel-Anordnung** im Menü, **so wie sie an der Wand erscheint**
-(`FLIP_Y = True`, also vertikal gespiegelt; Index = obige #):
+Die **Kachel-Anordnung** im Menü (Index = obige #) — ohne Flips ist die
+logische Sicht zugleich die Wand-Sicht:
 
 ```
-6  7
-4  5
-2  3
 0  1
+2  3
+4  5
+6  7
 ```
 
-(Logisch im Code ist Kachel 0 oben-links; durch `FLIP_Y = True` landet sie
-an der Wand unten-links.)
+Praktisch heißt das: oben-links **rot** (Spiel 0 Piano), oben-rechts **grün**
+(Spiel 1 Whack) usw. — genau so erscheint es an der Wand (`FLIP_X = FLIP_Y =
+False`).
 
 ### Heatmap — drück „zufällig", sieh das Muster aller vor dir
 
@@ -194,7 +195,7 @@ Adress-Pins **A0/A1/A2** eine eigene Adresse:
 | Chip 0  | n.c. | n.c. | n.c. | **0x20** | 0–15  |
 | Chip 1  | n.c. | n.c. | 5V   | **0x21** | 16–31 |
 | Chip 2  | n.c. | 5V   | n.c. | **0x22** | 32–47 |
-| Chip 3  | n.c. | 5V   | 5V   | **0x23** | 48–63 |
+| Chip 3  | 5V   | n.c. | n.c. | **0x24** | 48–63 |
 
 **n.c. = nicht angeschlossen.** Die Breakout-Platine hält die Adress-Pins per
 internem Pull-Down auf LOW (= GND = `0`), also muss man nur die Pins, die HIGH
@@ -231,7 +232,7 @@ in `config.py` an (Schlüssel `(x, y)` → `(chip_index 0..3, bit 0..15)`).
 ```bash
 sudo raspi-config         # Interface Options -> I2C -> Enable, dann reboot
 sudo apt install -y i2c-tools
-i2cdetect -y 1            # muss 0x20, 0x21, 0x22, 0x23 zeigen
+i2cdetect -y 1            # muss 0x20, 0x21, 0x22, 0x24 zeigen
 ```
 
 ### d) Python-Bibliotheken für die echte Hardware

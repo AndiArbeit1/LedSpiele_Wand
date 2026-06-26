@@ -73,7 +73,10 @@ MUX_ADDRESS = None
 # FLIP_X spiegelt links/rechts, FLIP_Y spiegelt oben/unten; beide zusammen
 # = 180deg-Drehung (Panel steht auf dem Kopf an der Wand).
 FLIP_X = False
-FLIP_Y = True
+FLIP_Y = False
+# Beide False: logische (0,0) = oben-links faellt auf die Kachel oben-links an
+# der Wand (bestaetigt: Menue zeigt rot=Spiel0 oben-links, gruen=Spiel1
+# oben-rechts). Nur bei kopfueber/seitenverkehrt montiertem Panel umstellen.
 
 
 def _phys_to_button(px, py):
