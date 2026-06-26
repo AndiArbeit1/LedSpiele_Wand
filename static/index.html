@@ -1,0 +1,315 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#000000">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>LED Matrix</title>
+<style>
+  :root { color-scheme: dark; }
+  html, body {
+    margin: 0; padding: 0; height: 100%; width: 100%;
+    background: #050505; color: #ccc;
+    font-family: -apple-system, system-ui, sans-serif;
+    overflow: hidden; touch-action: none;
+    user-select: none; -webkit-user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    overscroll-behavior: none;
+  }
+  body { display: flex; flex-direction: column; align-items: center; }
+  #grid {
+    flex: 1 1 auto; min-height: 0; touch-action: none;
+    display: block; background: #000;
+  }
+  #bar {
+    flex: 0 0 auto;
+    width: 100%; padding: 6px 12px;
+    box-sizing: border-box;
+    display: flex; align-items: center; justify-content: space-between;
+    font-size: 13px; gap: 12px;
+    background: #111; border-top: 1px solid #222;
+  }
+  #status { opacity: 0.7; font-feature-settings: "tnum"; }
+  button {
+    background: #222; color: #ddd; border: 1px solid #333;
+    border-radius: 6px; padding: 8px 14px;
+    font-size: 13px; font-family: inherit;
+    -webkit-tap-highlight-color: transparent;
+  }
+  button:active { background: #333; }
+</style>
+</head>
+<body>
+  <canvas id="grid"></canvas>
+  <div id="bar">
+    <span style="display:flex;flex-direction:column;line-height:1.2">
+      <strong style="font-size:13px;letter-spacing:.08em;color:#eee">LED&nbsp;MATRIX</strong>
+      <span id="status" style="font-size:11px">verbinde …</span>
+    </span>
+    <span style="display:flex;gap:8px;align-items:center">
+      <a href="/admin" style="color:#888;font-size:12px;text-decoration:none">Admin</a>
+      <button id="menuBtn" type="button">Menü</button>
+    </span>
+  </div>
+<script>
+(() => {
+  "use strict";
+  const canvas = document.getElementById("grid");
+  const ctx = canvas.getContext("2d", { alpha: false });
+  const statusEl = document.getElementById("status");
+  const menuBtn = document.getElementById("menuBtn");
+
+  let W = 8, H = 8;
+  let cellPx = 30;
+  let originX = 0, originY = 0;
+  let frame = new Uint8ClampedArray(W * H * 3);
+
+  const GAP = 1;
+  const CELL_BG = "#0a0a0a";
+
+  function layout() {
+    const rect = canvas.getBoundingClientRect();
+    const dpr = Math.max(1, window.devicePixelRatio || 1);
+    const cssW = Math.max(1, rect.width);
+    const cssH = Math.max(1, rect.height);
+    canvas.width = Math.floor(cssW * dpr);
+    canvas.height = Math.floor(cssH * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const cell = Math.floor(Math.min(cssW / W, cssH / H));
+    cellPx = Math.max(8, cell);
+    originX = Math.floor((cssW - cellPx * W) / 2);
+    originY = Math.floor((cssH - cellPx * H) / 2);
+    redraw();
+  }
+  window.addEventListener("resize", layout);
+  window.addEventListener("orientationchange", () => setTimeout(layout, 60));
+
+  function roundRect(x, y, w, h, r) {
+    r = Math.min(r, w / 2, h / 2);
+    ctx.beginPath();
+    if (ctx.roundRect) { ctx.roundRect(x, y, w, h, r); }
+    else {
+      ctx.moveTo(x + r, y);
+      ctx.arcTo(x + w, y, x + w, y + h, r);
+      ctx.arcTo(x + w, y + h, x, y + h, r);
+      ctx.arcTo(x, y + h, x, y, r);
+      ctx.arcTo(x, y, x + w, y, r);
+      ctx.closePath();
+    }
+  }
+
+  function redraw() {
+    const rect = canvas.getBoundingClientRect();
+    ctx.fillStyle = "#000";
+    ctx.fillRect(0, 0, rect.width, rect.height);
+    const sz = cellPx - GAP * 2;
+    const rad = Math.max(2, sz * 0.22);
+    for (let y = 0; y < H; y++) {
+      for (let x = 0; x < W; x++) {
+        const i = (y * W + x) * 3;
+        const r = frame[i], g = frame[i + 1], b = frame[i + 2];
+        const px = originX + x * cellPx + GAP;
+        const py = originY + y * cellPx + GAP;
+        // dunkle "LED aus"-Zelle
+        ctx.shadowBlur = 0;
+        ctx.fillStyle = CELL_BG;
+        roundRect(px, py, sz, sz, rad);
+        ctx.fill();
+        if (r || g || b) {
+          // leuchtende LED mit weichem Bloom
+          const lum = (r + g + b) / 765;
+          ctx.shadowColor = `rgb(${r},${g},${b})`;
+          ctx.shadowBlur = sz * (0.25 + 0.55 * lum);
+          ctx.fillStyle = `rgb(${r},${g},${b})`;
+          roundRect(px, py, sz, sz, rad);
+          ctx.fill();
+          ctx.shadowBlur = 0;
+        }
+        // Press-Highlight (weisser Ring) wenn diese Zelle aktuell gedrueckt ist.
+        if (pressedCount.get(y * W + x)) {
+          ctx.strokeStyle = "rgba(255,255,255,0.9)";
+          ctx.lineWidth = 2;
+          roundRect(px + 1, py + 1, sz - 2, sz - 2, rad);
+          ctx.stroke();
+        }
+      }
+    }
+    ctx.shadowBlur = 0;
+  }
+
+  function parseFrameHex(hex) {
+    if (hex.length < frame.length * 2) return;
+    for (let i = 0; i < frame.length; i++) {
+      frame[i] = parseInt(hex.substr(i * 2, 2), 16);
+    }
+    redraw();
+  }
+
+  // ---- SSE ----
+  let es = null;
+  let reconnectTimer = null;
+  function connect() {
+    if (es) { try { es.close(); } catch(_){} es = null; }
+    statusEl.textContent = "verbinde …";
+    es = new EventSource("/events");
+    es.addEventListener("config", (e) => {
+      try {
+        const c = JSON.parse(e.data);
+        if (c.w && c.h && (c.w !== W || c.h !== H)) {
+          W = c.w; H = c.h;
+          frame = new Uint8ClampedArray(W * H * 3);
+          layout();
+        }
+        statusEl.textContent = `${W}×${H} verbunden`;
+      } catch (_) {}
+    });
+    es.onmessage = (e) => {
+      parseFrameHex(e.data);
+    };
+    es.onerror = () => {
+      statusEl.textContent = "getrennt – verbinde neu …";
+      try { es.close(); } catch(_){}
+      es = null;
+      if (reconnectTimer) clearTimeout(reconnectTimer);
+      reconnectTimer = setTimeout(connect, 800);
+    };
+  }
+  connect();
+
+  // ---- Touch / Pointer ----
+  // pressedCount[cellIdx] = Anzahl Finger auf dieser Zelle.
+  // pointerCell[pointerId] = cellIdx wo dieser Finger zuletzt war.
+  const pressedCount = new Map();
+  const pointerCell = new Map();
+
+  function cellFromXY(clientX, clientY) {
+    const rect = canvas.getBoundingClientRect();
+    const lx = clientX - rect.left - originX;
+    const ly = clientY - rect.top - originY;
+    if (lx < 0 || ly < 0) return -1;
+    const cx = Math.floor(lx / cellPx);
+    const cy = Math.floor(ly / cellPx);
+    if (cx < 0 || cx >= W || cy < 0 || cy >= H) return -1;
+    return cy * W + cx;
+  }
+
+  // Touch-Events werden als kleine Batches geschickt um Burst-Drags zu glaetten.
+  const outbox = [];
+  let flushScheduled = false;
+  function send(x, y, p) {
+    outbox.push({ x, y, p });
+    if (!flushScheduled) {
+      flushScheduled = true;
+      queueMicrotask(flushOutbox);
+    }
+  }
+  function flushOutbox() {
+    flushScheduled = false;
+    if (outbox.length === 0) return;
+    const batch = outbox.splice(0, outbox.length);
+    try {
+      fetch("/input", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(batch.length === 1 ? batch[0] : batch),
+        keepalive: true,
+      }).catch(() => {});
+    } catch (_) {}
+  }
+
+  function pressCell(idx) {
+    const c = (pressedCount.get(idx) || 0) + 1;
+    pressedCount.set(idx, c);
+    if (c === 1) {
+      send(idx % W, (idx / W) | 0, true);
+      redraw();
+    }
+  }
+  function releaseCell(idx) {
+    const c = (pressedCount.get(idx) || 0) - 1;
+    if (c <= 0) {
+      pressedCount.delete(idx);
+      send(idx % W, (idx / W) | 0, false);
+      redraw();
+    } else {
+      pressedCount.set(idx, c);
+    }
+  }
+  function releaseAllForPointer(pid) {
+    const idx = pointerCell.get(pid);
+    if (idx === undefined) return;
+    pointerCell.delete(pid);
+    releaseCell(idx);
+  }
+
+  canvas.addEventListener("pointerdown", (ev) => {
+    ev.preventDefault();
+    try { canvas.setPointerCapture(ev.pointerId); } catch (_) {}
+    const idx = cellFromXY(ev.clientX, ev.clientY);
+    if (idx < 0) return;
+    pointerCell.set(ev.pointerId, idx);
+    pressCell(idx);
+  });
+
+  canvas.addEventListener("pointermove", (ev) => {
+    if (!pointerCell.has(ev.pointerId)) return;
+    const newIdx = cellFromXY(ev.clientX, ev.clientY);
+    const oldIdx = pointerCell.get(ev.pointerId);
+    if (newIdx === oldIdx) return;
+    // Wechsel der Zelle: alte loslassen, neue druecken.
+    pointerCell.delete(ev.pointerId);
+    releaseCell(oldIdx);
+    if (newIdx >= 0) {
+      pointerCell.set(ev.pointerId, newIdx);
+      pressCell(newIdx);
+    }
+  });
+
+  function onUp(ev) {
+    releaseAllForPointer(ev.pointerId);
+    try { canvas.releasePointerCapture(ev.pointerId); } catch (_) {}
+  }
+  canvas.addEventListener("pointerup", onUp);
+  canvas.addEventListener("pointercancel", onUp);
+  canvas.addEventListener("pointerleave", (ev) => {
+    if (ev.pointerType !== "mouse") return;
+    onUp(ev);
+  });
+
+  // Wenn der Tab in den Hintergrund geht: alle Drucke loslassen,
+  // sonst bleibt eine Zelle "hängen".
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) {
+      for (const pid of [...pointerCell.keys()]) releaseAllForPointer(pid);
+    }
+  });
+
+  // ---- Menu-Button ----
+  menuBtn.addEventListener("click", () => {
+    try {
+      fetch("/menu", { method: "POST", keepalive: true }).catch(() => {});
+    } catch (_) {}
+    menuBtn.blur();
+  });
+
+  // Verhindere Doppeltipp-Zoom / Browser-Gesten auf der Canvas-Region.
+  ["gesturestart", "gesturechange", "gestureend"].forEach(t => {
+    document.addEventListener(t, e => e.preventDefault());
+  });
+
+  // Wake-Lock optional (Screen anlassen).
+  if ("wakeLock" in navigator) {
+    const reqLock = () => navigator.wakeLock.request("screen").catch(() => {});
+    reqLock();
+    document.addEventListener("visibilitychange", () => {
+      if (!document.hidden) reqLock();
+    });
+  }
+
+  layout();
+})();
+</script>
+</body>
+</html>

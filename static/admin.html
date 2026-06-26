@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>LED Matrix — Admin</title>
+<style>
+  :root { color-scheme: dark; }
+  body {
+    margin: 0; padding: 16px;
+    background: #0a0a0c; color: #e6e6e6;
+    font-family: -apple-system, system-ui, Segoe UI, sans-serif;
+  }
+  h1 { font-size: 20px; margin: 0 0 4px; }
+  .sub { color: #888; font-size: 13px; margin-bottom: 20px; }
+  .cards { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 24px; }
+  .card {
+    background: #16161a; border: 1px solid #26262c; border-radius: 10px;
+    padding: 12px 16px; min-width: 130px;
+  }
+  .card .n { font-size: 28px; font-weight: 700; }
+  .card .l { color: #999; font-size: 12px; text-transform: uppercase; letter-spacing: .5px; }
+  .game {
+    background: #131317; border: 1px solid #26262c; border-radius: 12px;
+    padding: 14px 16px; margin-bottom: 16px;
+  }
+  .game h2 { font-size: 16px; margin: 0 0 2px; display: flex; align-items: center; gap: 8px; }
+  .swatch { width: 14px; height: 14px; border-radius: 4px; display: inline-block; }
+  .game .meta { color: #888; font-size: 12px; margin-bottom: 10px; }
+  table { border-collapse: collapse; width: 100%; max-width: 420px; }
+  th, td { text-align: left; padding: 6px 10px; font-size: 14px; }
+  th { color: #888; font-weight: 600; border-bottom: 1px solid #26262c; }
+  td.best { font-variant-numeric: tabular-nums; font-weight: 700; }
+  .empty { color: #666; font-style: italic; }
+  .foot { color: #555; font-size: 11px; margin-top: 24px; }
+  .topbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  #menuBtn {
+    background: #2a2a32; color: #eee; border: 1px solid #3a3a44;
+    border-radius: 8px; padding: 10px 18px; font-size: 14px; font-weight: 600;
+    font-family: inherit; cursor: pointer;
+  }
+  #menuBtn:hover { background: #34343e; }
+  #menuBtn:active { background: #3e3e4a; }
+  #menuBtn:disabled { opacity: .6; cursor: default; }
+  .controls { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: 4px 0 24px; }
+  .controls h3 { width: 100%; margin: 0 0 2px; font-size: 13px; color: #888; font-weight: 600; }
+  .controls button {
+    background: #2a1414; color: #ffb4b4; border: 1px solid #5a2a2a;
+    border-radius: 8px; padding: 9px 16px; font-size: 13px; font-weight: 600;
+    font-family: inherit; cursor: pointer;
+  }
+  .controls button:hover { background: #3a1a1a; }
+  .controls button:disabled { opacity: .6; cursor: default; }
+  .lobby { display: flex; align-items: center; gap: 10px; margin: 4px 0 18px; }
+  .lobby h3 { margin: 0; font-size: 13px; color: #888; font-weight: 600; }
+  .lobby select {
+    background: #16161a; color: #eee; border: 1px solid #3a3a44;
+    border-radius: 8px; padding: 8px 12px; font-size: 14px; font-family: inherit;
+  }
+</style>
+</head>
+<body>
+  <div class="topbar">
+    <h1>LED Matrix — Admin</h1>
+    <button id="menuBtn" type="button">⟵ Menü</button>
+  </div>
+  <div class="sub" id="sub">lade …</div>
+
+  <div class="lobby">
+    <h3>Lobby-Musik</h3>
+    <select id="lobbySel"></select>
+  </div>
+
+  <div class="cards" id="cards"></div>
+  <div id="games"></div>
+
+  <div class="controls">
+    <h3>Verwaltung</h3>
+    <button id="resetScores" type="button">Highscores zurücksetzen</button>
+    <button id="resetHeatmap" type="button">Heatmap zurücksetzen</button>
+  </div>
+
+  <div class="foot">Aktualisiert automatisch alle 5 s · <span id="ts"></span></div>
+
+<script>
+"use strict";
+
+// Spielfarben + Anzeige-Namen (muss zu games/* passen).
+const GAME_META = {
+  "Piano":     { color: "#FF0000", label: "Piano Tiles",     hint: "Treffer (mehr = besser)" },
+  "Whack":     { color: "#00FF00", label: "Whack-a-Mole",    hint: "Treffer (mehr = besser)" },
+  "Lights":    { color: "#0000FF", label: "Lights Out",      hint: "Klicks (weniger = besser)" },
+  "Simon":     { color: "#FFFF00", label: "Simon-Farben",    hint: "Sequenzlaenge (mehr = besser)" },
+  "Neon Link": { color: "#FF00FF", label: "Neon Link",       hint: "Punkte (mehr = besser)" },
+  "Labyrinth": { color: "#00FFFF", label: "Labyrinth",       hint: "Zeit 1/10 s (weniger = besser)" },
+  "Flappy":    { color: "#FFA500", label: "Flappy",          hint: "Roehren (mehr = besser)" },
+};
+
+function fmtTime(ts) {
+  if (!ts) return "—";
+  const d = new Date(ts * 1000);
+  return d.toLocaleString("de-DE");
+}
+
+async function refresh() {
+  let data;
+  try {
+    const r = await fetch("/api/stats", { cache: "no-store" });
+    data = await r.json();
+  } catch (e) {
+    document.getElementById("sub").textContent = "keine Verbindung zum Pi";
+    return;
+  }
+  render(data);
+  document.getElementById("ts").textContent = new Date().toLocaleTimeString("de-DE");
+}
+
+function render(data) {
+  const games = data.games || {};
+  const names = Object.keys(games);
+  let totalPlays = data.total_plays || 0;
+
+  document.getElementById("sub").textContent =
+    names.length ? `${names.length} Spiele aktiv` : "Noch keine Spiele gespielt";
+
+  // Karten oben.
+  const cards = document.getElementById("cards");
+  cards.innerHTML = "";
+  cards.appendChild(card(totalPlays, "Spiele gesamt"));
+  let mostPlayed = "—", mp = -1;
+  for (const n of names) {
+    if (games[n].plays > mp) { mp = games[n].plays; mostPlayed = (GAME_META[n]?.label || n); }
+  }
+  cards.appendChild(card(mostPlayed, "Beliebtestes"));
+
+  // Pro Spiel eine Tabelle.
+  const wrap = document.getElementById("games");
+  wrap.innerHTML = "";
+
+  const order = ["Piano", "Whack", "Lights", "Simon", "Neon Link", "Labyrinth", "Flappy"];
+  const sorted = order.filter(n => n in games).concat(names.filter(n => !order.includes(n)));
+
+  if (sorted.length === 0) {
+    wrap.innerHTML = '<div class="empty">Sobald gespielt wird, erscheinen hier die Highscores.</div>';
+    return;
+  }
+
+  for (const n of sorted) {
+    const g = games[n];
+    const meta = GAME_META[n] || { color: "#888", label: n, hint: "" };
+    const div = document.createElement("div");
+    div.className = "game";
+
+    let rows = "";
+    const levels = g.levels || {};
+    for (let lv = 1; lv <= 4; lv++) {
+      const L = levels[String(lv)];
+      const best = L && L.best != null ? L.best : "—";
+      const plays = L ? L.plays : 0;
+      rows += `<tr><td>Level ${lv}</td><td class="best">${best}</td><td>${plays}</td></tr>`;
+    }
+
+    div.innerHTML = `
+      <h2><span class="swatch" style="background:${meta.color}"></span>${meta.label}</h2>
+      <div class="meta">${g.plays} mal gespielt · ${meta.hint} · zuletzt ${fmtTime(g.last_ts)}</div>
+      <table>
+        <tr><th>Level</th><th>Bestwert</th><th>Spiele</th></tr>
+        ${rows}
+      </table>`;
+    wrap.appendChild(div);
+  }
+}
+
+function card(n, label) {
+  const d = document.createElement("div");
+  d.className = "card";
+  d.innerHTML = `<div class="n">${n}</div><div class="l">${label}</div>`;
+  return d;
+}
+
+// "Menü"-Knopf: schickt das laufende Spiel zurueck ins Menue (POST /menu).
+const menuBtn = document.getElementById("menuBtn");
+menuBtn.addEventListener("click", async () => {
+  menuBtn.disabled = true;
+  const orig = menuBtn.textContent;
+  try {
+    await fetch("/menu", { method: "POST" });
+    menuBtn.textContent = "✓ Menü";
+  } catch (e) {
+    menuBtn.textContent = "Fehler";
+  }
+  setTimeout(() => { menuBtn.textContent = orig; menuBtn.disabled = false; }, 1200);
+});
+
+// Reset-Knoepfe (mit Rueckfrage). POST -> danach Stats neu laden.
+function wireReset(id, url, msg) {
+  const b = document.getElementById(id);
+  b.addEventListener("click", async () => {
+    if (!confirm(msg)) return;
+    b.disabled = true;
+    const orig = b.textContent;
+    try { await fetch(url, { method: "POST" }); b.textContent = "✓ erledigt"; refresh(); }
+    catch (e) { b.textContent = "Fehler"; }
+    setTimeout(() => { b.textContent = orig; b.disabled = false; }, 1200);
+  });
+}
+wireReset("resetScores", "/api/reset-scores", "Wirklich ALLE Highscores löschen?");
+wireReset("resetHeatmap", "/api/reset-heatmap", "Wirklich die gesammelte Heatmap löschen?");
+
+// Lobby-Musik-Auswahl laden + Umstellen.
+const lobbySel = document.getElementById("lobbySel");
+async function loadLobby() {
+  try {
+    const r = await fetch("/api/lobby-music", { cache: "no-store" });
+    const d = await r.json();
+    lobbySel.innerHTML = "";
+    for (const tr of d.tracks) {
+      const o = document.createElement("option");
+      o.value = tr.id; o.textContent = tr.name;
+      if (tr.id === d.selected) o.selected = true;
+      lobbySel.appendChild(o);
+    }
+  } catch (e) {}
+}
+lobbySel.addEventListener("change", async () => {
+  try {
+    await fetch("/api/lobby-music?id=" + encodeURIComponent(lobbySel.value),
+                { method: "POST" });
+  } catch (e) {}
+});
+loadLobby();
+
+refresh();
+setInterval(refresh, 5000);
+</script>
+</body>
+</html>

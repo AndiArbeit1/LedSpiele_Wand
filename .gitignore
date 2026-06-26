@@ -1,0 +1,15 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+# Laufzeit-/Gerätedaten (werden auf dem Pi erzeugt, nicht versionieren)
+scores.json
+heatmap.json
+lobby_music.json
+
+# Sonstiges
+.Rhistory
+.DS_Store
