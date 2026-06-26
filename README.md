@@ -9,11 +9,8 @@ im **Handy-Browser** (der Pi macht dafür sein **eigenes WLAN** — der
 Matrix angeschlossen ist, läuft alles auf der Matrix und im Browser gibt
 es eine **Admin-Seite** mit Highscores und Statistiken.
 
-Diese Version (v3.3) ist identisch zur Pi-2-Version (v3.2), nur mit Doku
-und Hinweisen speziell für den **Raspberry Pi 3** (WLAN onboard, läuft mit
-**32- oder 64-Bit Raspberry Pi OS**). GPIO-Pinbelegung, I²C und die
-PWM/PCM-Hardware sind zwischen Pi 2 und Pi 3/4/5 identisch — am Code
-ändert sich nichts.
+Diese Version (v3.3) ist für den **Raspberry Pi 3** (WLAN onboard, läuft mit
+**32- oder 64-Bit Raspberry Pi OS**).
 
 Spiele und Level-Auswahl nutzen den vollen 8×8-Schirm. Das Spiel-Menü ist in
 **acht Kacheln** aufgeteilt (2 Spalten × 4 Reihen, je 4×2). Die Level-Auswahl

@@ -14,8 +14,8 @@ Switches:  64 Taster (z.B. Cherry MX), jeder direkt an einem Pin eines
            (4 * 16 = 64).
 
 Die vier MCP23017 sitzen direkt am I2C-Bus 1 auf den Adressen 0x20, 0x21,
-0x22 und 0x24 (wie auf der laufenden ESP32-Hardware; vierter Chip auf 0x24,
-nicht 0x23 -- mit i2cdetect bestaetigen). Per Adress-Pins A0..A2 einstellbar.
+0x22 und 0x24 (vierter Chip auf 0x24, nicht 0x23 -- mit i2cdetect
+bestaetigen). Per Adress-Pins A0..A2 einstellbar.
 Kein Multiplexer noetig. Anpassen falls anders verkabelt.
 
 Spiele und Spiel-Menue nutzen den vollen 8x8-Schirm; das Auswahl-Menue
@@ -41,8 +41,8 @@ LED_PIN = 21
 LED_BRIGHTNESS = 0.3
 # True, wenn die LED-Streifen reihenweise im Zickzack verloetet sind.
 # Kette beginnt bei Reihe y=0: gerade Reihen links->rechts, ungerade Reihen
-# rechts->links, usw. (identisch zur ESP32-Vorlage tileboard.py). Bei sauber
-# verdrahteter "alle Reihen gleich"-Matrix auf False setzen.
+# rechts->links, usw. Bei sauber verdrahteter "alle Reihen gleich"-Matrix
+# auf False setzen.
 LED_SERPENTINE = True
 
 # ---- I2C / MCP23017 ----
@@ -50,7 +50,7 @@ LED_SERPENTINE = True
 #   bus: I2C-Bus-Nummer am Pi (typisch 1).
 #   address: I2C-Adresse (0x20..0x27, per Adress-Pins A0..A2 einstellbar).
 #   mux_channel: Kanal am TCA9548A (0..7) oder None falls direkt am Bus.
-# Adressen wie auf der laufenden ESP32-Hardware: 0x20, 0x21, 0x22, 0x24.
+# Adressen: 0x20, 0x21, 0x22, 0x24.
 # ACHTUNG: der vierte Chip (Reihen 6/7) sitzt auf 0x24, NICHT 0x23 -- bitte
 # mit `i2cdetect -y 1` bzw. `hwtest.py --scan-only` bestaetigen und hier
 # anpassen, falls dein Chip doch auf 0x23 antwortet.
@@ -79,8 +79,8 @@ FLIP_Y = True
 def _phys_to_button(px, py):
     """Physische Kachel (px, py) -> (chip_index, bit_index 0..15).
 
-    Wie auf der ESP32-Hardware (tileboard.tile_to_button): Chip = py//2,
-    gerade Reihe -> Port A (bit = px), ungerade Reihe -> Port B (bit = 8+px).
+    Chip = py//2, gerade Reihe -> Port A (bit = px),
+    ungerade Reihe -> Port B (bit = 8+px).
     """
     chip_idx = py // 2
     bit_idx = px if (py % 2 == 0) else (8 + px)

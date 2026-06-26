@@ -1,4 +1,4 @@
-"""Flappy (8x8) -- neu fuer v3.
+"""Flappy (8x8).
 
 Ein Vogel haengt in einer festen Spalte (links). Von rechts scrollen
 "Roehren" mit einer Luecke heran. Tippe IRGENDWO -> der Vogel flattert

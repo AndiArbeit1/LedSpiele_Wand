@@ -18,7 +18,7 @@
 #                                Hardware dran ist). Laeuft als root (GPIO),
 #                                Spiel auf der Matrix, Browser nur /admin.
 #
-# Anders als beim Pi 2: der Pi 3 hat WLAN ONBOARD -- kein USB-WLAN-Stick
+# Der Pi 3 hat WLAN ONBOARD -- kein USB-WLAN-Stick
 # noetig, weder fuers Internet beim Setup noch fuer den Hotspot-Modus.
 # 32- oder 64-Bit Raspberry Pi OS (auch Lite) laeuft.
 #

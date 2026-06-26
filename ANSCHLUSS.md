@@ -6,13 +6,11 @@ bzw. die Pins anpassen.
 
 Koordinaten: **x = Spalte 0–7** (links → rechts), **y = Zeile 0–7** (oben → unten).
 
-> Diese Version ist für den **Raspberry Pi 3**: GPIO-Pinbelegung, I²C,
-> PWM/PCM-Hardware sind zum Pi 2 und Pi 4/5 identisch, also funktioniert
-> die Verkabelung unten 1:1. Zwei Pi-3-Annehmlichkeiten gegenüber dem Pi 2:
+> Diese Version ist für den **Raspberry Pi 3**. Zwei Annehmlichkeiten:
 > - **WLAN onboard** — für SSH/Admin-Webseite/Hotspot-Modus genügt das
 >   eingebaute `wlan0`, kein USB-WLAN-Stick nötig (es unterstützt den
 >   AP-Modus für den Hotspot). Ethernet geht natürlich auch.
-> - Pi 3 kann **32- oder 64-Bit-OS** — beim Flashen einfach die aktuelle
+> - **32- oder 64-Bit-OS** — beim Flashen einfach die aktuelle
 >   Raspberry-Pi-OS-Version wählen.
 
 ---

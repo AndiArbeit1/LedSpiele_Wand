@@ -53,8 +53,8 @@ def _xy_to_cell(x, y):
     """Logische Zelle (x, y) -> fortlaufende Zell-Nummer 0..NUM_CELLS-1.
 
     Erst Orientierung (FLIP_X/FLIP_Y) auf die physische Kachel drehen, dann
-    wie die ESP32-Vorlage (tileboard.tile_to_led_indices): Kette beginnt bei
-    Reihe 0, ungerade Reihen laufen rueckwaerts (Serpentine).
+    in die LED-Kette abbilden: Kette beginnt bei Reihe 0, ungerade Reihen
+    laufen rueckwaerts (Serpentine).
     """
     if config.FLIP_X:
         x = config.WIDTH - 1 - x
