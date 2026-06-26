@@ -20,14 +20,14 @@ nutzt **vier 4×4-Kacheln** (Quadranten).
 
 | # | Spiel | Farbe | Ziel | Score |
 |---|-------|-------|------|-------|
-| 0 | **Piano Tiles** | blau | fallende Tiles in der richtigen Spalte unten treffen | Treffer (mehr = besser) |
+| 0 | **Piano Tiles** | rot | fallende Tiles in der richtigen Spalte unten treffen | Treffer (mehr = besser) |
 | 1 | **Whack-a-Mole** | grün | leuchtenden Maulwurf antippen bevor er verschwindet | Treffer (mehr = besser) |
-| 2 | **Lights Out** | bernstein | alle Lichter ausschalten (Klick togglet Kreuz) | Klicks (weniger = besser) |
-| 3 | **Simon-Farben** | lila | gezeigte Farbsequenz nachtippen (4 Quadranten) | Sequenzlänge (mehr = besser) |
-| 4 | **Neon Link** | cyan | Farbgruppen (≥2) auflösen; Challenge-Farbe = Bonus | Punkte (mehr = besser) |
+| 2 | **Lights Out** | blau | alle Lichter ausschalten (Klick togglet Kreuz) | Klicks (weniger = besser) |
+| 3 | **Simon-Farben** | gelb | gezeigte Farbsequenz nachtippen (4 Quadranten) | Sequenzlänge (mehr = besser) |
+| 4 | **Neon Link** | magenta | Farbgruppen (≥2) auflösen; Challenge-Farbe = Bonus | Punkte (mehr = besser) |
 | 5 | **Labyrinth** | cyan | scrollendes Labyrinth (größer als 8×8), Spieler bleibt mittig; über die vier Ränder steuern (rechts/links/oben/unten), zum Ausgang finden | Zeit (weniger = besser) |
 | 6 | **Flappy** | orange | tippen = flattern, durch die Lücken; wird laufend schneller | Röhren (mehr = besser) |
-| 7 | **Heatmap** | rot-orange | leer → drücken → 5 s zeigen wo **alle Spieler** je gedrückt haben (dauerhaft) → zurück ins Menü | — |
+| 7 | **Heatmap** | violett | leer → drücken → 5 s zeigen wo **alle Spieler** je gedrückt haben (dauerhaft) → zurück ins Menü | — |
 
 **Level 1–4** = leicht → schwer (Tempo bzw. Schwierigkeit).
 
