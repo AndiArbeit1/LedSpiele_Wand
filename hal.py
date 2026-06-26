@@ -52,17 +52,19 @@ except Exception:
 def _xy_to_cell(x, y):
     """Logische Zelle (x, y) -> fortlaufende Zell-Nummer 0..NUM_CELLS-1.
 
-    Erst Orientierung (FLIP_X/FLIP_Y) auf die physische Kachel drehen, dann
-    in die LED-Kette abbilden: Kette beginnt bei Reihe 0, ungerade Reihen
-    laufen rueckwaerts (Serpentine).
+    Erst Orientierung (FLIP_X/FLIP_Y) auf die physische Kachel drehen. Die
+    LED-Kette ist eine Hardware-Konstante: sie beginnt UNTEN LINKS (Index 0)
+    und laeuft im Zickzack nach oben -- unterste Reihe links->rechts, naechste
+    rechts->links usw. Die Orientierung verschiebt nur, welche logische Zelle
+    auf welche physische Kachel faellt, nicht den Verlauf der Kette selbst
+    (deshalb wird der Zickzack an der physischen UNTEN-Reihe verankert, nicht
+    an der logischen Zeile).
     """
-    if config.FLIP_X:
-        x = config.WIDTH - 1 - x
-    if config.FLIP_Y:
-        y = config.HEIGHT - 1 - y
-    if config.LED_SERPENTINE and (y % 2 == 1):
-        x = config.WIDTH - 1 - x
-    return y * config.WIDTH + x
+    px = (config.WIDTH - 1 - x) if config.FLIP_X else x        # Spalte von links
+    py_top = (config.HEIGHT - 1 - y) if config.FLIP_Y else y    # Zeile von oben
+    row = config.HEIGHT - 1 - py_top                            # Zeile von UNTEN
+    col = (config.WIDTH - 1 - px) if (config.LED_SERPENTINE and row % 2 == 1) else px
+    return row * config.WIDTH + col
 
 
 def _cell_led_indices(x, y):
