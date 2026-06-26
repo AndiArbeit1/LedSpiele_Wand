@@ -49,7 +49,8 @@ False`).
 
 Schirm komplett leer → sobald jemand einen (scheinbar zufälligen) Taster
 drückt, deckt sich für 5 Sekunden die **gesamte** Heatmap auf: der eigene
-Druck **plus alle Drücke aller Spieler davor** (kalt = blau … heiß = weiß).
+Druck **plus alle Drücke aller Spieler davor** — **eine Farbe (Orange), die
+mit der Häufigkeit immer heller wird** (öfter gedrückt = heller).
 Der eigene Druck blinkt weiß, damit man sich im Muster wiederfindet → danach
 automatisch zurück ins Menü. Es gibt keine Level-Auswahl.
 
@@ -72,6 +73,8 @@ dass die „zufällige" Wahl gar nicht so zufällig ist. Zum Zurücksetzen einfa
 - Nach dem Spiel: die **erreichte Zahl** (Punkte / Züge / Zeit) wird angezeigt —
   bei einem **neuen Rekord** in Regenbogenfarben, sonst ruhig in der Spielfarbe.
   Größere Zahlen laufen als Laufband durch. Details stehen auf der Admin-Seite.
+- **Lobby-Musik:** im Menü läuft Hintergrundmusik. Track-Auswahl (oder **„Aus"**)
+  auf der Admin-Seite; beim Spielstart wird die Musik automatisch gestoppt.
 
 ---
 
@@ -321,7 +324,7 @@ ledmatrix-pi/
   hal.py              echter HAL (WS2812 + 4x MCP23017); startet Admin-Server
   web_hal.py          Handy-Bridge (HTTP+SSE) + Admin-Routen
   admin_server.py     reiner Admin-/Statistik-Server (Hardware-Modus)
-  webcommon.py        gemeinsame Web-Routen (/admin, /api/stats)
+  webcommon.py        gemeinsame Web-Routen (/admin, Stats, Resets, Lobby-Musik)
   scoreboard.py       persistente Highscores/Statistiken (scores.json)
   sim_hal.py          Pygame-Fenster (Dev)
   framework.py        Game-Basisklasse + Farb-/Zeichen-Helfer
@@ -329,12 +332,14 @@ ledmatrix-pi/
   select_screens.py   Level-Auswahl (vier 4x4-Kacheln)
   score_screen.py     Ergebnis: zeigt die Zahl (Rekord = Regenbogen)
   songs.py            Melodien für Piano Tiles
+  lobbymusic.py       Lobby-/Menü-Musik-Auswahl (persistent, „Aus" möglich)
   setup_pi3.sh        Einmal-Setup (I2C, Pakete, systemd-Dienst)
   setup_hotspot.sh    Pi-WLAN-Hotspot an/aus (nmcli)
   games/              piano_tiles, whack, lights_out, simon,
                       neon_link, labyrinth, flappy, heatmap
+  music/              Lobby-Musik (mp3)
   static/index.html   Spiel-UI (Browser)
-  static/admin.html   Admin-/Statistik-Seite (Highscores)
+  static/admin.html   Admin-Seite (Highscores, Resets, Lobby-Musik, Menü)
 ```
 
 ## Hinweise
@@ -342,3 +347,7 @@ ledmatrix-pi/
 - Highscores landen in `scores.json` (wird automatisch angelegt).
 - Die konkreten Werte stehen auf `/admin`, auf der Matrix gibt es nach jedem
   Spiel nur kurzes Farb-Feedback (Rekord = Regenbogen).
+- Die **Admin-Seite** (`/admin`) bietet außerdem: „**Menü**"-Knopf (laufendes
+  Spiel zurück ins Menü), **Highscores** bzw. **Heatmap zurücksetzen** und die
+  Auswahl der **Lobby-Musik** (inkl. „Aus"). Auswahl wird in
+  `lobby_music.json` gespeichert.

@@ -3,8 +3,9 @@
   - Der Schirm ist zunaechst LEER (alles aus), sobald das Spiel gewaehlt ist.
   - Es passiert nichts, bis jemand einen (scheinbar zufaelligen) Taster drueckt.
   - Dann wird die GESAMTE Heatmap gezeigt: der aktuelle Druck PLUS alle
-    Druecke aller Spieler davor (kalt = blau ... heiss = weiss). Der eigene
-    Druck blinkt weiss, damit man ihn im Muster wiederfindet.
+    Druecke aller Spieler davor -- eine Farbe (Orange, REVEAL_COLOR), die mit
+    der Haeufigkeit immer heller wird. Der eigene Druck blinkt weiss, damit
+    man ihn im Muster wiederfindet.
   - Nach REVEAL_SECONDS geht es automatisch zurueck ins Menue.
 
 Im Gegensatz zu frueher werden die Daten DAUERHAFT gesammelt (heatmap.json
