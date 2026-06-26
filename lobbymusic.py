@@ -19,7 +19,6 @@ OFF_ID = "off"
 # Verfuegbare Tracks (Reihenfolge = Anzeige auf der Admin-Seite).
 TRACKS = [
     {"id": "retro",    "name": "Retro Arcade", "file": "retro.mp3"},
-    {"id": "fortnite", "name": "Fortnite OG",  "file": "fortnite.mp3"},
 ]
 
 # Standard-Track (die neue Retro-Arcade-Musik).
