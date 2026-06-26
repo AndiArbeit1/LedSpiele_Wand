@@ -31,14 +31,18 @@ nutzt **vier 4×4-Kacheln** (Quadranten).
 
 **Level 1–4** = leicht → schwer (Tempo bzw. Schwierigkeit).
 
-Die **Kachel-Anordnung** im Menü (Index = obige #):
+Die **Kachel-Anordnung** im Menü, **so wie sie an der Wand erscheint**
+(`FLIP_Y = True`, also vertikal gespiegelt; Index = obige #):
 
 ```
-0  1
-2  3
-4  5
 6  7
+4  5
+2  3
+0  1
 ```
+
+(Logisch im Code ist Kachel 0 oben-links; durch `FLIP_Y = True` landet sie
+an der Wand unten-links.)
 
 ### Heatmap — drück „zufällig", sieh das Muster aller vor dir
 
@@ -161,6 +165,24 @@ Wichtig: Auf der „DIN"-Seite einspeisen (Pfeilrichtung), nicht „DOUT". Wenn
 die Matrix im Zickzack verlötet ist (Kette beginnt **unten links** und
 läuft nach oben: unterste Reihe links→rechts, nächste rechts→links …),
 `LED_SERPENTINE = True` lassen (Default), sonst auf `False` in `config.py`.
+
+So liegen die **Zell-Indizes der Kette** auf dem Panel (physische Sicht, wie
+an der Wand — Index 0 unten-links, Zickzack nach oben):
+
+```
+oben    63 62 61 60 59 58 57 56
+        48 49 50 51 52 53 54 55
+        47 46 45 44 43 42 41 40
+        32 33 34 35 36 37 38 39
+        31 30 29 28 27 26 25 24
+        16 17 18 19 20 21 22 23
+        15 14 13 12 11 10  9  8
+unten    0  1  2  3  4  5  6  7
+```
+
+Das ist eine **Hardware-Konstante**; `FLIP_X`/`FLIP_Y` ändern nur, welche
+logische Spielzelle auf welche Kachel fällt, nicht den Kettenverlauf. Jede
+Zelle steht für 4 LEDs (`LEDS_PER_CELL = 4`), die gemeinsam leuchten.
 
 ### b) Taster über 4× MCP23017 — I²C
 
